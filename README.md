@@ -40,16 +40,21 @@ CYScan/
 
 ### 1. Cloner le dépôt
 ```bash
-git clone https://github.com/lnolland/CYScan
+git clone https://github.com/votre-utilisateur/CYScan.git
 cd CYScan
 ```
 
-Assurez-vous d’avoir installé **Poppler** et de bien configurer le bon chemin dans `extractz.py` :
-```python
-os.environ["PATH"] += os.pathsep + r"H:\\votrechemin\\poppler-24.08.0\\Library\\bin"
+### 2. Installer les dépendances
+```bash
+pip install -r requirements.txt
 ```
 
-### 2. Lancer l’application
+Assurez-vous d’avoir installé **Poppler** et de bien configurer le chemin dans `extractz.py` :
+```python
+os.environ["PATH"] += os.pathsep + r"H:\\poppler-24.08.0\\Library\\bin"
+```
+
+### 3. Lancer l’application
 ```bash
 python app.py
 ```
@@ -75,3 +80,7 @@ Puis ouvrir [http://127.0.0.1:5000](http://127.0.0.1:5000) dans votre navigateur
 Projet universitaire réalisé dans le cadre du semestre CY Tech 2025.
 
 ---
+
+## 📄 Licence
+Ce projet est destiné à un usage éducatif uniquement.
+
