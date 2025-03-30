@@ -44,9 +44,9 @@ git clone https://github.com/lnolland/OCR_table
 cd CYScan
 ```
 
-Assurez-vous d’avoir installé **Poppler** et de bien configurer le chemin dans `extractz.py` :
+Assurez-vous d’avoir installé **Poppler** et de bien configurer le bon chemin dans `extractz.py` :
 ```python
-os.environ["PATH"] += os.pathsep + r"H:\\poppler-24.08.0\\Library\\bin"
+os.environ["PATH"] += os.pathsep + r"H:\\votrechemin\\poppler-24.08.0\\Library\\bin"
 ```
 
 ### 2. Lancer l’application
