@@ -196,7 +196,7 @@ def clean_and_format_cell(cell):
     # - garde les autres textes inchangés
 
     if not cell or cell in {"1", "(1", "(!)", "(1)", "("}:
-        return None  # valeurs ignorées souvent issues de notes de bas de page
+        return None  # valeurs inconnues
 
     cell = clean_text(cell)
 
@@ -224,7 +224,7 @@ def detect_column_types(rows):
         # - c'est une string
         # - ce n'est pas une année
         # - elle est suffisamment longue (plus de 3 caractères)
-        # - ce n'est pas un float déguisé avec un point final (ex: "18.")
+        # - ce n'est pas un float déguisé ou mal lu (avec un point final ex: "18.")
         return isinstance(c, str) and not is_year(c) and len(c) > 3 and not re.match(r'^\d{1,3}\.$', c)
 
     # On cherche la ligne avec le plus de textes valides pour estimer les colonnes texte
