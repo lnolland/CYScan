@@ -84,7 +84,88 @@ def postprocess_titles(flat_titles):
 
     return final_titles
 
- 
+ def detect_tables(image):
+    """
+    Détecte les zones de tableaux dans une image en utilisant les lignes horizontales et verticales.
+    Retourne une liste de boîtes englobantes (x, y, w, h) correspondant aux tableaux.
+    """
+
+    # Conversion en niveaux de gris
+    img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Amélioration du contraste pour mieux distinguer les lignes
+    enhanced = cv2.equalizeHist(imggray)
+
+    # Seuillage adaptatif (inversion binaire + Otsu) pour séparer les lignes noires du fond
+    , thresh = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+
+    # Détection des lignes horizontales (kernel large horizontal)
+    kernel_h = np.ones((1, 50), np.uint8)
+    horizontal_lines = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel_h)
+
+    # Détection des lignes verticales (kernel haut vertical)
+    kernel_v = np.ones((50, 1), np.uint8)
+    vertical_lines = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel_v)
+
+    # Fusion des lignes pour créer un masque des tableaux
+    table_mask = cv2.add(horizontal_lines, vertical_lines)
+
+    # Dilatation pour renforcer les contours détectés
+    morph = cv2.dilate(table_mask, np.ones((3, 3), np.uint8), iterations=2)
+
+    # Extraction des contours extérieurs (RETREXTERNAL)
+    contours,  = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Filtrage des petits contours (largeur > 200, hauteur > 100)
+    detected_contours = [
+        cv2.boundingRect(contour)
+        for contour in contours
+        if cv2.boundingRect(contour)[2] > 200 and cv2.boundingRect(contour)[3] > 100
+    ]
+
+    # Fusion des rectangles proches (si plusieurs contours font partie d’un même tableau)
+    return merge_contours(detected_contours, threshold=30)
+     
+def merge_contours(contours, threshold=50):
+    """
+    Fusionne les contours proches spatialement en un seul rectangle englobant.
+    
+    Utilisé pour regrouper plusieurs zones qui font en réalité partie du même tableau
+    mais ont été détectées comme plusieurs petits rectangles.
+    
+    Paramètre :
+    - contours : liste de rectangles (x, y, w, h)
+    - threshold : distance maximale entre deux rectangles pour être fusionnés
+    """
+
+    merged = []  # liste finale de rectangles fusionnés
+
+    for cnt in contours:
+        x, y, w, h = cnt
+        merged_flag = False  # indique si le rectangle courant a été fusionné ou non
+
+        for i, (mx, my, mw, mh) in enumerate(merged):
+            # Test de chevauchement ou proximité horizontale/verticale avec marge
+            if (x < mx + mw + threshold and x + w > mx - threshold and
+                y < my + mh + threshold and y + h > my - threshold):
+                
+                # Fusion des deux rectangles en un seul englobant
+                new_x = min(x, mx)
+                new_y = min(y, my)
+                new_w = max(x + w, mx + mw) - new_x
+                new_h = max(y + h, my + mh) - new_y
+
+                # Remplace l’ancien rectangle fusionné par le nouveau
+                merged[i] = (new_x, new_y, new_w, new_h)
+                merged_flag = True
+                break
+
+        # Si le rectangle courant n’a été fusionné avec aucun autre, on l’ajoute tel quel
+        if not merged_flag:
+            merged.append(cnt)
+
+    return merged
+
  def apply_title_matching(rows):
     """
     Prend les lignes OCR groupées et identifie la portion correspondant aux titres.
@@ -107,6 +188,7 @@ def postprocess_titles(flat_titles):
 
     # On retourne la concaténation des titres corrigés + les données du tableau
     return processed_titles + rows[data_start:]
+
 
 def extract_text_raw(roi):
     # Applique PaddleOCR sur la région d'intérêt (ROI) du tableau
